@@ -6,6 +6,7 @@ export const ProgressWrapper = styled.div`
   align-items: center;
   width: 100%;
   padding: 1em;
+  min-height: 48px;
 `;
 
 export const Bar = styled.div`

@@ -1,3 +1,7 @@
 /*******************************
          Site Overrides
 *******************************/
+
+i.play.icon, i.pause.icon, i.step.icon {
+  cursor: pointer;
+}

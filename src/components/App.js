@@ -1,5 +1,5 @@
 import { Header, Search, Segment } from 'semantic-ui-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
 import _ from 'lodash';
@@ -9,6 +9,7 @@ import EpisodeList from './EpisodeList';
 
 import './App.scss';
 import Player from './Player';
+import { MediaContextProvider } from './MediaContext';
 // import AudioContext from './AudioContext';
 
 const App = () => {
@@ -30,14 +31,16 @@ const App = () => {
 
   return (
     <>
-      <Segment className="App" basic>
-        <Header size="huge">{data.data.title}</Header>
-        <SelectedEpisodeContext.Provider value={value}>
-          {/* <AudioContext.Provider value={new Audio()}> */}
-          <PodcastContainer slug={slug} />
-          {/* </AudioContext.Provider> */}
-        </SelectedEpisodeContext.Provider>
-      </Segment>
+      <MediaContextProvider>
+        <Segment className="App" basic>
+          <Header size="huge">{data.data.title}</Header>
+          <SelectedEpisodeContext.Provider value={value}>
+            {/* <AudioContext.Provider value={new Audio()}> */}
+            <PodcastContainer slug={slug} />
+            {/* </AudioContext.Provider> */}
+          </SelectedEpisodeContext.Provider>
+        </Segment>
+      </MediaContextProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </>
   );
@@ -48,6 +51,8 @@ const PodcastContainer = ({ slug }) => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [results, setResults] = useState([]);
+
+  const audioPlayer = useRef();
 
   const { isLoading, error, data } = useQuery('podcastEpisodes', async () => {
     const res = await fetch(
@@ -98,35 +103,28 @@ const PodcastContainer = ({ slug }) => {
   };
 
   return (
-    <Segment>
-      <Player sortedEpisodes={sortedEpisodes} />
-      <Search
-        input={{ icon: 'search', iconPosition: 'left' }}
-        onSearchChange={_.debounce(handleSearchChange, 500, {
-          leading: true,
-        })}
-        value={searchValue}
-        loading={searchLoading}
-        resultRenderer={() => {}}
-        showNoResults={false}
+    <>
+      <audio ref={audioPlayer} />
+      <Player sortedEpisodes={sortedEpisodes} audioPlayer={audioPlayer} />
+      <Segment basic>
+        <Search
+          size="large"
+          input={{ icon: 'search', iconPosition: 'left' }}
+          onSearchChange={_.debounce(handleSearchChange, 500, {
+            leading: true,
+          })}
+          value={searchValue}
+          loading={searchLoading}
+          resultRenderer={() => {}}
+          showNoResults={false}
+        />
+      </Segment>
+      <EpisodeList
+        sortedEpisodes={results.length ? results : sortedEpisodes}
+        audioPlayer={audioPlayer}
       />
-      <EpisodeList sortedEpisodes={results.length ? results : sortedEpisodes} />
-      <PlaybackMetadata />
-      <PlaybackProgressBar />
-    </Segment>
+    </>
   );
 };
-
-export const PlaybackMetadata = () => (
-  <div>
-    PlaybackMetadata
-  </div>
-);
-
-export const PlaybackProgressBar = () => (
-  <div>
-    PlaybackProgressBar
-  </div>
-);
 
 export default App;

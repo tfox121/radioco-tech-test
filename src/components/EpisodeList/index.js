@@ -1,16 +1,35 @@
-import { useContext } from 'react';
-import { Icon, Item } from 'semantic-ui-react';
+import { useContext, useState } from 'react';
+import { Item } from 'semantic-ui-react';
 import timeAgo from '../../utils/timeAgo';
+import PlayOrPauseIcon from '../PlayOrPauseIcon';
 
 import SelectedEpisodeContext from '../SelectedEpisodeContext';
 
-const EpisodeLine = ({ episodeData, index }) => {
-  const { setSelectedEpisode } = useContext(SelectedEpisodeContext);
-  // const episodeSelected = selectedEpisode && selectedEpisode.id === episodeData.id;
+const EpisodeLine = ({ episodeData, index, audioPlayer }) => {
+  const { selectedEpisode, setSelectedEpisode } = useContext(SelectedEpisodeContext);
+  const [isPaused, setIsPaused] = useState(true);
 
-  // console.log(episodeSelected);
+  const episodeSelectedAndPlaying = selectedEpisode
+  && selectedEpisode.id === episodeData.id && !isPaused;
+
+  const handleClick = () => {
+    if (episodeSelectedAndPlaying) {
+      audioPlayer.current.pause();
+      return;
+    }
+    setSelectedEpisode({ index, ...episodeData });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const durationMinutes = episodeData.duration / 60000;
+
+  audioPlayer.current.addEventListener('pause', () => {
+    setIsPaused(true);
+  });
+
+  audioPlayer.current.addEventListener('play', () => {
+    setIsPaused(false);
+  });
 
   return (
     <Item>
@@ -22,25 +41,27 @@ const EpisodeLine = ({ episodeData, index }) => {
           <div dangerouslySetInnerHTML={{ __html: episodeData.description }} />
         </Item.Description>
         <Item.Extra>
-          <Icon
-            name="play circle"
-            size="big"
-            onClick={() => setSelectedEpisode({ index, ...episodeData })}
-          />
+          <PlayOrPauseIcon paused={!episodeSelectedAndPlaying} handleClick={handleClick} size="big" />
           {durationMinutes.toFixed(0)}
           {' mins · '}
           {timeAgo.format(Date.parse(episodeData.published_at))}
+          {episodeSelectedAndPlaying && episodeSelectedAndPlaying.toString()}
         </Item.Extra>
       </Item.Content>
     </Item>
   );
 };
 
-export default ({ sortedEpisodes }) => (
+export default ({ sortedEpisodes, audioPlayer }) => (
   <Item.Group divided>
     {sortedEpisodes
-        && sortedEpisodes.map((episodeData, index) => (
-          <EpisodeLine episodeData={episodeData} index={index} key={episodeData.id} />
-        ))}
+      && sortedEpisodes.map((episodeData, index) => (
+        <EpisodeLine
+          episodeData={episodeData}
+          audioPlayer={audioPlayer}
+          index={index}
+          key={episodeData.id}
+        />
+      ))}
   </Item.Group>
 );

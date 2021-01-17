@@ -2,20 +2,33 @@ import { useContext, useEffect, useState } from 'react';
 import {
   Header, Icon, Image, Segment,
 } from 'semantic-ui-react';
-import UseAudio from '../UseAudio';
+import { Slider } from 'react-semantic-ui-range';
 
+// import UseAudio from '../UseAudio';
 import ProgressBar from '../ProgressBar';
 import SelectedEpisodeContext from '../SelectedEpisodeContext';
 import {
-  Metadata, PlaybackControlsStyles, Spacer, Text,
+  Controls,
+  Mask,
+  Metadata, PlayerStyles, Spacer, Text,
 } from './PlayerStyles';
 import useLocalStorage from '../useLocalStorage';
+import PlayOrPauseIcon from '../PlayOrPauseIcon';
+import { Media } from '../MediaContext';
 
-export default ({ sortedEpisodes }) => {
-  const { selectedEpisode, setSelectedEpisode } = useContext(SelectedEpisodeContext);
+export default ({ sortedEpisodes, audioPlayer }) => {
+  const { selectedEpisode, setSelectedEpisode } = useContext(
+    SelectedEpisodeContext,
+  );
 
-  const audio = UseAudio().current;
-  const [currentTime, setCurrentTime] = useState(audio ? audio.currentTime : 0);
+  // const audio = UseAudio().current;
+  const audio = audioPlayer.current;
+  const [currentTime, setCurrentTime] = useState(
+    audio ? audio.currentTime : 0,
+  );
+  const [volume, setVolume] = useState(0.5);
+  const [isPaused, setIsPaused] = useState(true);
+  const [readyState, setReadyState] = useState(0);
 
   const [storedEpisode, setStoredEpisode] = useLocalStorage('episode');
 
@@ -30,15 +43,37 @@ export default ({ sortedEpisodes }) => {
       && sortedEpisodes
       && sortedEpisodes.length
     ) {
-      const episode = sortedEpisodes.filter((stored) => stored.id === storedEpisode)[0];
-      setSelectedEpisode(episode);
+      let episodeIndex;
+      const episode = sortedEpisodes.filter(
+        (stored, index) => {
+          if (stored.id === storedEpisode) {
+            episodeIndex = index;
+            return true;
+          }
+          return false;
+        },
+      )[0];
+      setSelectedEpisode({ index: episodeIndex, ...episode });
     }
-  }, [selectedEpisode, sortedEpisodes, storedEpisode, setSelectedEpisode, setStoredEpisode]);
+  }, [
+    selectedEpisode,
+    sortedEpisodes,
+    storedEpisode,
+    setSelectedEpisode,
+    setStoredEpisode,
+  ]);
 
-  const playPause = () => {
-    console.log(audio.paused ? 'PLAY' : 'PAUSED');
-    audio.paused ? audio.play() : audio.pause();
-  };
+  useEffect(() => {
+    if (audio) {
+      setReadyState(audio.readyState);
+    }
+  }, [audio]);
+
+  useEffect(() => {
+    if (audio) {
+      audio.volume = volume;
+    }
+  }, [volume]);
 
   useEffect(() => {
     if (selectedEpisode) {
@@ -48,17 +83,22 @@ export default ({ sortedEpisodes }) => {
     }
   }, [selectedEpisode]);
 
-  useEffect(() => {
-    if (audio) {
-      audio.paused ? audio.play() : audio.pause();
-    }
-  }, [audio]);
+  // useEffect(() => {
+  //   if (audio) {
+  //     audio.paused ? audio.play() : audio.pause();
+  //   }
+  // }, [audio]);
 
   if (!selectedEpisode || !audio) {
     return null;
   }
 
+  const playPause = () => {
+    isPaused ? audio.play() : audio.pause();
+  };
+
   const skipBackward = () => {
+    setReadyState(0);
     if (selectedEpisode.index === 0) {
       setSelectedEpisode(selectedEpisode);
       return;
@@ -70,6 +110,7 @@ export default ({ sortedEpisodes }) => {
   };
 
   const skipForward = () => {
+    setReadyState(0);
     if (selectedEpisode.index === sortedEpisodes.length - 1) {
       return;
     }
@@ -79,14 +120,27 @@ export default ({ sortedEpisodes }) => {
     });
   };
 
-  const playOrPauseIcon = (playing) => {
-    if (playing === true) {
-      return (
-        <Icon name="pause circle outline" size="big" onClick={playPause} />
-      );
-    }
-    return <Icon name="play circle outline" size="big" onClick={playPause} />;
+  const settings = {
+    start: 0.5,
+    min: 0,
+    max: 1,
+    step: 0.1,
+    onChange: (value) => {
+      setVolume(value);
+    },
   };
+
+  audio.addEventListener('canplay', () => {
+    setReadyState(2);
+  });
+
+  audio.addEventListener('pause', () => {
+    setIsPaused(true);
+  });
+
+  audio.addEventListener('play', () => {
+    setIsPaused(false);
+  });
 
   audio.addEventListener('timeupdate', () => {
     setCurrentTime(audio.currentTime);
@@ -97,31 +151,61 @@ export default ({ sortedEpisodes }) => {
   });
 
   return (
-    <Segment basic inverted textAlign="center" className="App">
-      <PlaybackControlsStyles>
-        <Metadata className="now-playing__side">
-          <Image src={selectedEpisode.artwork.urls[1].url} />
+    <PlayerStyles>
+      <Segment
+        basic
+        inverted
+        textAlign="left"
+        style={{
+          background: `url(${selectedEpisode.artwork.urls[1].url}) center/cover`,
+        }}
+      >
+        <Mask />
+        <Metadata>
+          <Media greaterThan="mobile">
+            <Image src={selectedEpisode.artwork.urls[1].url} />
+          </Media>
           <Text>
-            <Header size="large" className="now-playing__name">
-              {selectedEpisode.title}
-            </Header>
-            <Header className="now-playing__artist">
-              {selectedEpisode.author}
-            </Header>
-            <Segment
-              inverted
-              dangerouslySetInnerHTML={{ __html: selectedEpisode.description }}
-            />
+            <Segment basic inverted>
+              <div>
+                <Header size="large" className="now-playing__name">
+                  {selectedEpisode.title}
+                </Header>
+                <Header size="tiny" className="now-playing__artist">
+                  {selectedEpisode.author}
+                </Header>
+                <div
+                  inverted
+                  dangerouslySetInnerHTML={{
+                    __html: selectedEpisode.description,
+                  }}
+                />
+              </div>
+            </Segment>
             <Spacer />
-            <div className="controls">
+            <Controls>
               <Icon name="step backward" size="large" onClick={skipBackward} />
-              {playOrPauseIcon(!audio.paused)}
+              <PlayOrPauseIcon
+                paused={isPaused}
+                handleClick={playPause}
+                size="huge"
+              />
               <Icon name="step forward" size="large" onClick={skipForward} />
-            </div>
-            <ProgressBar currentTime={currentTime} isPlaying={!audio.paused} />
+            </Controls>
+            <ProgressBar
+              currentTime={currentTime}
+              isPlaying={!audio.paused}
+              readyState={readyState}
+            />
+            <Slider
+              inverted
+              value={volume}
+              color="orange"
+              settings={settings}
+            />
           </Text>
         </Metadata>
-      </PlaybackControlsStyles>
-    </Segment>
+      </Segment>
+    </PlayerStyles>
   );
 };
