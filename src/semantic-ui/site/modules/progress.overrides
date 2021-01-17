@@ -1,3 +1,16 @@
 /*******************************
          Site Overrides
 *******************************/
+
+.ui.progress, .ui.active.progress {
+  width: 100%;
+}
+
+.ui.progress .bar, .ui.active.progress .bar {
+  min-width: 0;
+}
+
+.ui.progress:last-child {
+  margin: 0;
+}
+

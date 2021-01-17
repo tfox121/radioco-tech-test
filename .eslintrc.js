@@ -48,6 +48,7 @@ module.exports = {
         ],
       },
     ],
+    'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': [1],
     'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
     'no-unused-expressions': [
