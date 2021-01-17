@@ -15,6 +15,7 @@ import {
 import useLocalStorage from '../useLocalStorage';
 import PlayOrPauseIcon from '../PlayOrPauseIcon';
 import { Media } from '../MediaContext';
+import useWindowSize from '../useWindowSize';
 
 export default ({ sortedEpisodes, audioPlayer }) => {
   const { selectedEpisode, setSelectedEpisode } = useContext(
@@ -31,6 +32,7 @@ export default ({ sortedEpisodes, audioPlayer }) => {
   const [readyState, setReadyState] = useState(0);
 
   const [storedEpisode, setStoredEpisode] = useLocalStorage('episode');
+  const size = useWindowSize();
 
   useEffect(() => {
     if (selectedEpisode) {
@@ -153,12 +155,13 @@ export default ({ sortedEpisodes, audioPlayer }) => {
   return (
     <PlayerStyles>
       <Segment
+        className="wrapper"
         basic
         inverted
         textAlign="left"
-        style={{
+        style={size.width < 768 ? {
           background: `url(${selectedEpisode.artwork.urls[1].url}) center/cover`,
-        }}
+        } : {}}
       >
         <Mask />
         <Metadata>
@@ -194,7 +197,6 @@ export default ({ sortedEpisodes, audioPlayer }) => {
             </Controls>
             <ProgressBar
               currentTime={currentTime}
-              isPlaying={!audio.paused}
               readyState={readyState}
             />
             <Slider

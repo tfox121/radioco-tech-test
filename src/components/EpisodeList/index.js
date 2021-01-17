@@ -4,6 +4,7 @@ import timeAgo from '../../utils/timeAgo';
 import PlayOrPauseIcon from '../PlayOrPauseIcon';
 
 import SelectedEpisodeContext from '../SelectedEpisodeContext';
+import { ResponsiveItem } from './EpisodeListStyles';
 
 const EpisodeLine = ({ episodeData, index, audioPlayer }) => {
   const { selectedEpisode, setSelectedEpisode } = useContext(SelectedEpisodeContext);
@@ -32,7 +33,7 @@ const EpisodeLine = ({ episodeData, index, audioPlayer }) => {
   });
 
   return (
-    <Item>
+    <ResponsiveItem>
       <Item.Image size="tiny" src={episodeData.artwork.urls[0].url} />
       <Item.Content>
         <Item.Header>{episodeData.title}</Item.Header>
@@ -41,14 +42,18 @@ const EpisodeLine = ({ episodeData, index, audioPlayer }) => {
           <div dangerouslySetInnerHTML={{ __html: episodeData.description }} />
         </Item.Description>
         <Item.Extra>
-          <PlayOrPauseIcon paused={!episodeSelectedAndPlaying} handleClick={handleClick} size="big" />
+          <PlayOrPauseIcon
+            paused={!episodeSelectedAndPlaying}
+            handleClick={handleClick}
+            size="big"
+          />
           {durationMinutes.toFixed(0)}
           {' mins · '}
           {timeAgo.format(Date.parse(episodeData.published_at))}
           {episodeSelectedAndPlaying && episodeSelectedAndPlaying.toString()}
         </Item.Extra>
       </Item.Content>
-    </Item>
+    </ResponsiveItem>
   );
 };
 
