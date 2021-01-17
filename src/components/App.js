@@ -13,7 +13,17 @@ import { MediaContextProvider } from './MediaContext';
 // import AudioContext from './AudioContext';
 
 const App = () => {
-  const [selectedEpisode, setSelectedEpisode] = useState(undefined);
+  const audioPlayer = useRef();
+
+  const [selectedEpisode, setSelectedEpisodeProto] = useState(undefined);
+
+  const setSelectedEpisode = (episode) => {
+    console.log('Setting Episode');
+    audioPlayer.current.setAttribute('src', episode.url);
+    audioPlayer.current.currentTime = (episode.duration / 1000) - 5;
+    setSelectedEpisodeProto(episode);
+  };
+
   const value = { selectedEpisode, setSelectedEpisode };
 
   const slug = 'create-reach-inspire';
@@ -36,7 +46,7 @@ const App = () => {
           <Header size="huge">{data.data.title}</Header>
           <SelectedEpisodeContext.Provider value={value}>
             {/* <AudioContext.Provider value={new Audio()}> */}
-            <PodcastContainer slug={slug} />
+            <PodcastContainer slug={slug} audioPlayer={audioPlayer} />
             {/* </AudioContext.Provider> */}
           </SelectedEpisodeContext.Provider>
         </Segment>
@@ -46,13 +56,11 @@ const App = () => {
   );
 };
 
-const PodcastContainer = ({ slug }) => {
+const PodcastContainer = ({ slug, audioPlayer }) => {
   const [sortedEpisodes, setSortedEpisodes] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [results, setResults] = useState([]);
-
-  const audioPlayer = useRef();
 
   const { isLoading, error, data } = useQuery('podcastEpisodes', async () => {
     const res = await fetch(

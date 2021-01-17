@@ -77,13 +77,13 @@ export default ({ sortedEpisodes, audioPlayer }) => {
     }
   }, [volume]);
 
-  useEffect(() => {
-    if (selectedEpisode) {
-      console.log(selectedEpisode);
-      audio.setAttribute('src', selectedEpisode.url);
-      audio.play();
-    }
-  }, [selectedEpisode]);
+  // useEffect(() => {
+  //   if (selectedEpisode) {
+  //     console.log(selectedEpisode);
+  //     audio.setAttribute('src', selectedEpisode.url);
+  //     audio.play();
+  //   }
+  // }, [selectedEpisode]);
 
   // useEffect(() => {
   //   if (audio) {
@@ -96,30 +96,45 @@ export default ({ sortedEpisodes, audioPlayer }) => {
   }
 
   const playPause = () => {
-    isPaused ? audio.play() : audio.pause();
+    isPaused ? audio.play().catch((err) => {
+      console.error(err);
+    }) : audio.pause();
   };
 
   const skipBackward = () => {
     setReadyState(0);
+    let episode;
     if (selectedEpisode.index === 0) {
-      setSelectedEpisode(selectedEpisode);
-      return;
+      episode = selectedEpisode;
+    } else {
+      episode = {
+        index: selectedEpisode.index - 1,
+        ...sortedEpisodes[selectedEpisode.index - 1],
+      };
     }
-    setSelectedEpisode({
-      index: selectedEpisode.index - 1,
-      ...sortedEpisodes[selectedEpisode.index - 1],
-    });
+    setSelectedEpisode(episode);
+    if (!isPaused) {
+      audio.play().catch((err) => {
+        console.error(err);
+      });
+    }
   };
 
   const skipForward = () => {
-    setReadyState(0);
+    // setReadyState(0);
     if (selectedEpisode.index === sortedEpisodes.length - 1) {
       return;
     }
-    setSelectedEpisode({
+    const episode = {
       index: selectedEpisode.index + 1,
       ...sortedEpisodes[selectedEpisode.index + 1],
-    });
+    };
+    setSelectedEpisode(episode);
+    if (!isPaused) {
+      audio.play().catch((err) => {
+        console.error(err);
+      });
+    }
   };
 
   const settings = {
@@ -149,7 +164,8 @@ export default ({ sortedEpisodes, audioPlayer }) => {
   });
 
   audio.addEventListener('ended', () => {
-    skipForward();
+    console.log('ENDED');
+    // skipForward();
   });
 
   return (
