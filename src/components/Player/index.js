@@ -1,4 +1,6 @@
-import { useContext, useEffect, useState } from 'react';
+import {
+  useCallback, useContext, useEffect, useState,
+} from 'react';
 import {
   Header, Icon, Image, Segment,
 } from 'semantic-ui-react';
@@ -65,40 +67,12 @@ export default ({ sortedEpisodes, audioPlayer }) => {
     setStoredEpisode,
   ]);
 
-  useEffect(() => {
-    if (audio) {
-      setReadyState(audio.readyState);
-    }
-  }, [audio]);
-
-  useEffect(() => {
-    if (audio) {
-      audio.volume = volume;
-    }
-  }, [volume]);
-
-  // useEffect(() => {
-  //   if (selectedEpisode) {
-  //     console.log(selectedEpisode);
-  //     audio.setAttribute('src', selectedEpisode.url);
-  //     audio.play();
-  //   }
-  // }, [selectedEpisode]);
-
-  // useEffect(() => {
-  //   if (audio) {
-  //     audio.paused ? audio.play() : audio.pause();
-  //   }
-  // }, [audio]);
-
-  if (!selectedEpisode || !audio) {
-    return null;
-  }
-
   const playPause = () => {
-    isPaused ? audio.play().catch((err) => {
-      console.error(err);
-    }) : audio.pause();
+    isPaused
+      ? audio.play().catch((err) => {
+        console.error(err);
+      })
+      : audio.pause();
   };
 
   const skipBackward = () => {
@@ -120,8 +94,8 @@ export default ({ sortedEpisodes, audioPlayer }) => {
     }
   };
 
-  const skipForward = () => {
-    // setReadyState(0);
+  const skipForward = useCallback(async () => {
+    setReadyState(0);
     if (selectedEpisode.index === sortedEpisodes.length - 1) {
       return;
     }
@@ -135,7 +109,82 @@ export default ({ sortedEpisodes, audioPlayer }) => {
         console.error(err);
       });
     }
-  };
+  }, [
+    audio,
+    isPaused,
+    selectedEpisode,
+    setSelectedEpisode,
+    sortedEpisodes,
+  ]);
+
+  useEffect(() => {
+    if (audio) {
+      setReadyState(audio.readyState);
+    }
+  }, [audio]);
+
+  useEffect(() => {
+    if (audio) {
+      audio.volume = volume;
+    }
+  }, [volume, audio]);
+
+  useEffect(() => {
+    const eventListener = () => setReadyState(2);
+    const pauseEventListener = () => setIsPaused(true);
+    const playEventListener = () => setIsPaused(false);
+    const timeUpdateEventListener = () => setCurrentTime(audio.currentTime);
+
+    if (audio) {
+      audio.addEventListener('canplay', eventListener);
+      audio.addEventListener('pause', pauseEventListener);
+      audio.addEventListener('play', playEventListener);
+      audio.addEventListener('timeupdate', timeUpdateEventListener);
+    }
+    return () => {
+      if (audio) {
+        audio.removeEventListener('canplay', eventListener);
+        audio.removeEventListener('pause', pauseEventListener);
+        audio.removeEventListener('play', playEventListener);
+        audio.removeEventListener('timeupdate', timeUpdateEventListener);
+      }
+    };
+  }, [audio]);
+
+  useEffect(() => {
+    const endedEventListener = async () => {
+      await skipForward();
+      audio.play().catch((err) => {
+        console.error(err);
+      });
+    };
+    if (audio) {
+      audio.addEventListener('ended', endedEventListener);
+    }
+    return () => {
+      if (audio) {
+        audio.removeEventListener('ended', endedEventListener);
+      }
+    };
+  }, [audio, skipForward]);
+
+  // useEffect(() => {
+  //   if (selectedEpisode) {
+  //     console.log(selectedEpisode);
+  //     audio.setAttribute('src', selectedEpisode.url);
+  //     audio.play();
+  //   }
+  // }, [selectedEpisode]);
+
+  // useEffect(() => {
+  //   if (audio) {
+  //     audio.paused ? audio.play() : audio.pause();
+  //   }
+  // }, [audio]);
+
+  if (!selectedEpisode || !audio) {
+    return null;
+  }
 
   const settings = {
     start: 0.5,
@@ -146,27 +195,6 @@ export default ({ sortedEpisodes, audioPlayer }) => {
       setVolume(value);
     },
   };
-
-  audio.addEventListener('canplay', () => {
-    setReadyState(2);
-  });
-
-  audio.addEventListener('pause', () => {
-    setIsPaused(true);
-  });
-
-  audio.addEventListener('play', () => {
-    setIsPaused(false);
-  });
-
-  audio.addEventListener('timeupdate', () => {
-    setCurrentTime(audio.currentTime);
-  });
-
-  audio.addEventListener('ended', () => {
-    console.log('ENDED');
-    // skipForward();
-  });
 
   return (
     <PlayerStyles>

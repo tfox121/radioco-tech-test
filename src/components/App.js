@@ -18,9 +18,7 @@ const App = () => {
   const [selectedEpisode, setSelectedEpisodeProto] = useState(undefined);
 
   const setSelectedEpisode = (episode) => {
-    console.log('Setting Episode');
     audioPlayer.current.setAttribute('src', episode.url);
-    audioPlayer.current.currentTime = (episode.duration / 1000) - 5;
     setSelectedEpisodeProto(episode);
   };
 
@@ -36,8 +34,6 @@ const App = () => {
   if (isLoading) return 'Loading podcast...';
 
   if (error) return `Podcast data fetch failed with an error: ${error.message}`;
-
-  // console.log(data.data);
 
   return (
     <>
