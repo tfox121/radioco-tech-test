@@ -25,7 +25,7 @@
     "build": "craco build",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "eject": "craco eject",
-    "predeploy": "npm test && lint-all",
+    "predeploy": "npm test && npm run lint-all",
     "deploy": "git push heroku main",
     "lint-all": "npx eslint --fix \"{,!(node_modules)/**/}*.{js,jsx}\""
   },
