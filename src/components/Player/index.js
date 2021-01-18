@@ -121,7 +121,7 @@ export default ({ sortedEpisodes, audioPlayer }) => {
     if (audio) {
       setReadyState(audio.readyState);
     }
-  }, [audio]);
+  }, [audio, selectedEpisode]);
 
   useEffect(() => {
     if (audio) {

@@ -21,6 +21,7 @@ export default ({ episodeData, index, audioPlayer }) => {
       return;
     }
     setSelectedEpisode({ index, ...episodeData });
+    audioPlayer.current.play();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
