@@ -23,7 +23,7 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "eject": "craco eject",
     "lint-all": "npx eslint --fix \"{,!(node_modules)/**/}*.{js,jsx}\""
   },
@@ -46,6 +46,7 @@
     ]
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.12.11",
     "@craco/craco": "^6.0.0",
     "@semantic-ui-react/craco-less": "^1.2.1",
     "eslint": "^7.14.0",
