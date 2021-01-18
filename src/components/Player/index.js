@@ -6,7 +6,6 @@ import {
 } from 'semantic-ui-react';
 import { Slider } from 'react-semantic-ui-range';
 
-// import UseAudio from '../UseAudio';
 import ProgressBar from '../ProgressBar';
 import SelectedEpisodeContext from '../SelectedEpisodeContext';
 import {
@@ -24,7 +23,6 @@ export default ({ sortedEpisodes, audioPlayer }) => {
     SelectedEpisodeContext,
   );
 
-  // const audio = UseAudio().current;
   const audio = audioPlayer.current;
   const [currentTime, setCurrentTime] = useState(
     audio ? audio.currentTime : 0,
